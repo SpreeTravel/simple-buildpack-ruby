@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+# Cenit's Ruby Buildpack. This script accepts parameters for a build
+# directory, a cache directory, and a directory for app environment variables.
+
+# Usage:
+#
+#     $ bin/compile <build-dir> <cache-dir> <env-path>
+
+# Fail fast and fail hard.
+set -eo pipefail
+
+[ "$BUILDPACK_XTRACE" ] && set -o xtrace
+
+# Paths.
+BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
+ROOT_DIR=$(dirname $BIN_DIR)
+BUILD_DIR=$1
+CACHE_DIR=$2
+ENV_DIR=$3
+
+# Common Problem Warnings
+export WARNINGS_LOG=$(mktemp)
+
+# Setup buildpack instrumentation.
+TMP_APP_DIR=$CACHE_DIR/tmp_app_dir
+
+# Directory Hacks for path consistency.
+APP_DIR='/app/release'
+
+# Set new context.
+ORIG_BUILD_DIR=$BUILD_DIR
+BUILD_DIR=$APP_DIR
+
+mkdir -p $BUILD_DIR
+cp -R $ORIG_BUILD_DIR/* $BUILD_DIR
+
+# We'll need to send these statics to other scripts we `source`.
+export BUILD_DIR CACHE_DIR BIN_DIR PROFILE_PATH
+
+export LANG=en_US.UTF-8
+
+# Switch to the repo's context.
+cd $BUILD_DIR
+
+# Warn for lack of Procfile.
+if [[ ! -f Procfile ]]; then
+  echo 'Warning: Your application is missing a Procfile. This file tells Heroku how to run your application.'
+  echo 'Learn more: https://devcenter.heroku.com/articles/procfile'
+fi
+
+# Install dependencies
+bundle install
+
+# Prepare the cache.
+mkdir -p $CACHE_DIR
+
