@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# This script serves as the
+# [**Cenit's Ruby Buildpack**](https://github.com/openjaf/simple-buildpack-ruby)
+# detector.
+#
+# A [buildpack](https://devcenter.heroku.com/articles/buildpacks) is an
+# adapter between a Ruby application and Heroku's runtime.
+
+# ## Usage
+# Compiling an app into a slug is simple:
+#
+#     $ bin/detect <build-dir> <cache-dir>
+
+BUILD_DIR=$1
+
+if [ -f "$BUILD_DIR/Gemfile" ]; then
+  echo "Ruby"
+  exit 0
+else
+  echo "no"
+  exit 1
+fi
